@@ -16,4 +16,10 @@ describe('renderResumePdf', () => {
     expect(buf.subarray(0, 5).toString()).toBe('%PDF-')
     expect(buf.length).toBeGreaterThan(1000)
   })
+
+  it('renders identical bytes for the same resume', async () => {
+    const a = await renderResumePdf(resume)
+    const b = await renderResumePdf(resume)
+    expect(a.equals(b)).toBe(true)
+  })
 })

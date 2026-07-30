@@ -11,10 +11,15 @@ const s = StyleSheet.create({
   bullet: { marginLeft: 10 },
 })
 
+// Fixed epoch so the PDF byte stream is deterministic for a given resume:
+// @react-pdf/renderer defaults CreationDate/ModDate to `new Date()`, which would
+// otherwise embed the render wall-clock time (and a derived /ID hash) into the output.
+const DETERMINISTIC_DATE = new Date(0)
+
 export function ResumeDocument({ resume }: { resume: Resume }) {
   const b = resume.basics
   return (
-    <Document>
+    <Document creationDate={DETERMINISTIC_DATE} modificationDate={DETERMINISTIC_DATE}>
       <Page size="A4" style={s.page}>
         <Text style={s.name}>{b.name}</Text>
         <Text style={s.contact}>{[b.email, b.phone, b.location, ...b.links].filter(Boolean).join('  •  ')}</Text>
