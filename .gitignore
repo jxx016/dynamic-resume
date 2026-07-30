@@ -6,3 +6,20 @@ node_modules/
 .DS_Store
 .superpowers/
 data/
+
+# next.js / build output
+/out/
+/build
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+
+# vercel
+.vercel
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.pem
