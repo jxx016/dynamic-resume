@@ -46,7 +46,7 @@ export default function BuildPage() {
       const res = await fetch('/api/resumes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label, kind: 'text', text: JSON.stringify(draft) }),
+        body: JSON.stringify({ kind: 'resume', label, resume: draft }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to save resume')

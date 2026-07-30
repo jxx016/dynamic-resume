@@ -40,6 +40,14 @@ export function ResumeDocument({ resume }: { resume: Resume }) {
 
         {resume.skills.length > 0 && <Text style={s.section}>Skills</Text>}
         {resume.skills.length > 0 && <Text>{resume.skills.map(sk => sk.name).join(', ')}</Text>}
+
+        {resume.projects.length > 0 && <Text style={s.section}>Projects</Text>}
+        {resume.projects.map((p, i) => (
+          <View key={i}>
+            <Text style={s.role}>{p.name}</Text>
+            {p.bullets.map((bl, j) => <Text key={j} style={s.bullet}>• {bl}</Text>)}
+          </View>
+        ))}
       </Page>
     </Document>
   )
