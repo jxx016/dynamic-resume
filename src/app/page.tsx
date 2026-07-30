@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { getContext } from '@/lib/app-context'
 import { ResumeCard } from '@/components/ResumeCard'
 
+export const dynamic = 'force-dynamic'
+
 export default function Home() {
   const resumes = getContext().store.list()
   return (
