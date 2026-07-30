@@ -1,0 +1,38 @@
+import type { Resume } from '@/lib/schema/resume'
+
+const HONESTY = `Rules:
+- Only reframe, reorder, and rephrase the candidate's REAL experience to match the job.
+- DO NOT invent or fabricate skills, employers, dates, or achievements.
+- Any content the candidate does not already have goes into "suggestions" with status "pending" (never directly into the resume).`
+
+export function importPrompt(rawText: string): string {
+  return `Convert the following resume text into a Resume JSON object (fields: basics, summary, ` +
+    `experience, education, skills, projects). Give every bullet a unique "id". ` +
+    `Reply with ONLY the JSON.\n\n--- RESUME TEXT ---\n${rawText}`
+}
+
+export function builderPrompt(
+  history: { role: 'user' | 'assistant'; text: string }[],
+  draft: Partial<Resume> | null,
+): string {
+  const convo = history.map(h => `${h.role}: ${h.text}`).join('\n')
+  return `You are helping a user build a resume from scratch. Ask one focused follow-up if needed, ` +
+    `and always return the best current Resume JSON draft so far (unique bullet ids). Reply with ONLY JSON ` +
+    `of shape { "message": string, "draft": Resume }.\n\nDraft so far: ${JSON.stringify(draft)}\n\n${convo}`
+}
+
+export function tailorPrompt(base: Resume, jdText: string): string {
+  return `Tailor this resume to the job description. ${HONESTY}\n\n` +
+    `Return a TailoringResult JSON: { tailoredResume, changeLog, suggestions, atsReport }. ` +
+    `atsReport must list jdKeywords, matched, missing, and a 0-100 score. Reply with ONLY the JSON.\n\n` +
+    `--- BASE RESUME ---\n${JSON.stringify(base)}\n\n--- JOB DESCRIPTION ---\n${jdText}`
+}
+
+export function pickPrompt(
+  jdText: string,
+  resumes: { id: string; label: string; summary: string }[],
+): string {
+  return `Given the job description, choose the best-matching base resume. Candidates:\n` +
+    resumes.map(r => `- id=${r.id} label="${r.label}" summary="${r.summary}"`).join('\n') +
+    `\n\nReply with ONLY JSON { "resumeId": string, "reason": string }.\n\n--- JOB DESCRIPTION ---\n${jdText}`
+}
