@@ -12,5 +12,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params
   const parsed = ResumeSchema.safeParse(await req.json())
   if (!parsed.success) return NextResponse.json({ error: 'invalid resume' }, { status: 400 })
-  return NextResponse.json(getContext().store.update(id, parsed.data))
+  const { store } = getContext()
+  if (!store.get(id)) return NextResponse.json({ error: 'not found' }, { status: 404 })
+  return NextResponse.json(store.update(id, parsed.data))
 }
