@@ -3,7 +3,9 @@ import { setContextForTest } from '@/lib/app-context'
 import { SqliteResumeStore } from '@/lib/store/sqlite-store'
 import { StructuredClient } from '@/lib/ai/structured-client'
 import { POST as tailorPost } from '@/app/api/tailor/route'
+import { POST as builderPost } from '@/app/api/builder/message/route'
 import { GET as providersGet } from '@/app/api/providers/route'
+import { MissingKeyError } from '@/lib/env'
 import type { Resume } from '@/lib/schema/resume'
 
 const base = {
@@ -72,6 +74,41 @@ describe('provider selection on POST /api/tailor', () => {
     const res = await tailorPost(tailorReq({ baseResumeId: 'a', jdText: 'JD' }))
     expect(res.status).toBe(400)
     expect((await res.json()).error).toMatch(/GEMINI_API_KEY|OPENAI_API_KEY/)
+  })
+
+  it('maps a MissingKeyError from clientFor to 400 naming the exact env var', async () => {
+    const store = new SqliteResumeStore(':memory:')
+    store.create(base)
+    setContextForTest({
+      store,
+      clientFor: (p) => { throw new MissingKeyError(p, 'OPENAI_API_KEY') },
+    })
+    const res = await tailorPost(tailorReq({ baseResumeId: 'a', jdText: 'JD', provider: 'openai' }))
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toMatch(/OPENAI_API_KEY/)
+  })
+})
+
+describe('provider selection on POST /api/builder/message', () => {
+  const builderModelOut = JSON.stringify({
+    message: 'Tell me more',
+    draft: {
+      basics: { name: 'Jo', email: '', phone: '', location: '', links: [] },
+      summary: '', experience: [], education: [], skills: [], projects: [],
+    },
+  })
+
+  it('uses the requested provider', async () => {
+    const fake = new StructuredClient({ generate: async () => builderModelOut })
+    setContextForTest({
+      store: new SqliteResumeStore(':memory:'),
+      clientFor: (p) => { requested.push(p); return fake },
+    })
+    const res = await builderPost(new Request('http://t/api/builder/message', {
+      method: 'POST', body: JSON.stringify({ history: [], draft: null, provider: 'openai' }),
+    }))
+    expect(res.status).toBe(200)
+    expect(requested).toEqual(['openai'])
   })
 })
 

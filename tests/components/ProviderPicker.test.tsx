@@ -41,4 +41,16 @@ describe('ProviderPicker', () => {
     await waitFor(() => expect(screen.getByText(/no ai provider configured/i)).toBeDefined())
     expect(screen.queryByRole('combobox')).toBeNull()
   })
+
+  it('shows a distinct error when the providers request fails, not the empty-list notice', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: 'boom' }),
+    }) as unknown as typeof fetch
+    render(<ProviderPicker value={null} onChange={() => {}} />)
+    await waitFor(() => expect(screen.getByText(/couldn.t load ai providers/i)).toBeDefined())
+    expect(screen.queryByText(/no ai provider configured/i)).toBeNull()
+    expect(screen.queryByRole('combobox')).toBeNull()
+  })
 })

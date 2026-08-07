@@ -35,5 +35,12 @@ export function createOpenAiTransport(): GenerateTransport {
 }
 
 export function createTransport(provider: Provider): GenerateTransport {
-  return provider === 'openai' ? createOpenAiTransport() : createGeminiTransport()
+  switch (provider) {
+    case 'gemini': return createGeminiTransport()
+    case 'openai': return createOpenAiTransport()
+    default: {
+      const _exhaustive: never = provider
+      throw new Error(`Unsupported provider: ${String(_exhaustive)}`)
+    }
+  }
 }
