@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { GeminiClient } from '@/lib/ai/gemini'
+import { StructuredClient } from '@/lib/ai/structured-client'
 import { builderTurn } from '@/lib/agents/builder'
 
 const modelOut = JSON.stringify({
@@ -12,7 +12,7 @@ const modelOut = JSON.stringify({
 
 describe('builderTurn', () => {
   it('returns a message and a validated draft', async () => {
-    const client = new GeminiClient({ generate: async () => modelOut })
+    const client = new StructuredClient({ generate: async () => modelOut })
     const turn = await builderTurn(client, [{ role: 'user', text: 'I was a PM at Acme' }], null)
     expect(turn.message).toMatch(/impact/i)
     expect(turn.draft.basics.name).toBe('Jo')

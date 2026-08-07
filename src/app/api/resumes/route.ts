@@ -3,7 +3,7 @@ import { getContext } from '@/lib/app-context'
 import { importResume } from '@/lib/import/resume-importer'
 import { extractText } from '@/lib/import/extract-text'
 import { newId, nowIso } from '@/lib/ids'
-import { AiValidationError } from '@/lib/ai/gemini'
+import { AiValidationError } from '@/lib/ai/structured-client'
 import { ResumeSchema } from '@/lib/schema/resume'
 
 // Body for the AI-free save path: an already-structured resume from the builder.

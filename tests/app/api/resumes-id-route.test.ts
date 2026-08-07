@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setContextForTest } from '@/lib/app-context'
 import { SqliteResumeStore } from '@/lib/store/sqlite-store'
-import { GeminiClient } from '@/lib/ai/gemini'
+import { StructuredClient } from '@/lib/ai/structured-client'
 import { PUT } from '@/app/api/resumes/[id]/route'
 import type { Resume } from '@/lib/schema/resume'
 
@@ -15,7 +15,7 @@ let store: SqliteResumeStore
 beforeEach(() => {
   store = new SqliteResumeStore(':memory:')
   store.create(base)
-  setContextForTest({ store, client: new GeminiClient({ generate: async () => '' }) })
+  setContextForTest({ store, client: new StructuredClient({ generate: async () => '' }) })
 })
 
 describe('PUT /api/resumes/[id]', () => {

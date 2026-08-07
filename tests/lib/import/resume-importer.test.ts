@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { GeminiClient } from '@/lib/ai/gemini'
+import { StructuredClient } from '@/lib/ai/structured-client'
 import { importResume } from '@/lib/import/resume-importer'
 
 const modelBody = JSON.stringify({
@@ -9,7 +9,7 @@ const modelBody = JSON.stringify({
 
 describe('importResume', () => {
   it('produces a validated base Resume with stamped meta', async () => {
-    const client = new GeminiClient({ generate: async () => modelBody })
+    const client = new StructuredClient({ generate: async () => modelBody })
     const r = await importResume(client, 'raw', { id: 'r1', label: 'Imported', createdAt: '2026-07-30T00:00:00Z' })
     expect(r.id).toBe('r1')
     expect(r.isBase).toBe(true)

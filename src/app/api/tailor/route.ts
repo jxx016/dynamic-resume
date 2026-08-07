@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getContext } from '@/lib/app-context'
 import { tailorResume } from '@/lib/agents/tailor'
 import { pickBase } from '@/lib/agents/base-picker'
-import { AiValidationError } from '@/lib/ai/gemini'
+import { AiValidationError } from '@/lib/ai/structured-client'
 
 export async function POST(req: Request) {
   const { baseResumeId, jdText } = await req.json()

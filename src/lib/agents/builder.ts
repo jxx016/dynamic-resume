@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { GeminiClient } from '@/lib/ai/gemini'
+import { StructuredClient } from '@/lib/ai/structured-client'
 import { builderPrompt } from '@/lib/ai/prompts'
 import { ResumeSchema, type Resume } from '@/lib/schema/resume'
 
@@ -7,7 +7,7 @@ const DraftBody = ResumeSchema.omit({ id: true, label: true, isBase: true, sourc
 const TurnSchema = z.object({ message: z.string(), draft: DraftBody })
 
 export async function builderTurn(
-  client: GeminiClient,
+  client: StructuredClient,
   history: { role: 'user' | 'assistant'; text: string }[],
   draft: Partial<Resume> | null,
 ): Promise<{ message: string; draft: Resume }> {

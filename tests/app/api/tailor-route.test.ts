@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setContextForTest } from '@/lib/app-context'
 import { SqliteResumeStore } from '@/lib/store/sqlite-store'
-import { GeminiClient } from '@/lib/ai/gemini'
+import { StructuredClient } from '@/lib/ai/structured-client'
 import { POST } from '@/app/api/tailor/route'
 import type { Resume } from '@/lib/schema/resume'
 
@@ -18,7 +18,7 @@ const modelOut = JSON.stringify({
 
 beforeEach(() => {
   const store = new SqliteResumeStore(':memory:'); store.create(base)
-  setContextForTest({ store, client: new GeminiClient({ generate: async () => modelOut }) })
+  setContextForTest({ store, client: new StructuredClient({ generate: async () => modelOut }) })
 })
 
 describe('POST /api/tailor', () => {

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getContext } from '@/lib/app-context'
 import { builderTurn } from '@/lib/agents/builder'
-import { AiValidationError } from '@/lib/ai/gemini'
+import { AiValidationError } from '@/lib/ai/structured-client'
 
 export async function POST(req: Request) {
   const { history, draft } = await req.json()

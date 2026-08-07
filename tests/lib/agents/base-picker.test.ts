@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { GeminiClient } from '@/lib/ai/gemini'
+import { StructuredClient } from '@/lib/ai/structured-client'
 import { pickBase } from '@/lib/agents/base-picker'
 import type { Resume } from '@/lib/schema/resume'
 
@@ -10,11 +10,11 @@ const mk = (id: string): Resume => ({ id, label: id, isBase: true,
 
 describe('pickBase', () => {
   it('returns the model-chosen id when valid', async () => {
-    const client = new GeminiClient({ generate: async () => '{"resumeId":"b","reason":"fit"}' })
+    const client = new StructuredClient({ generate: async () => '{"resumeId":"b","reason":"fit"}' })
     expect(await pickBase(client, 'jd', [mk('a'), mk('b')])).toBe('b')
   })
   it('falls back to the first resume on an unknown id', async () => {
-    const client = new GeminiClient({ generate: async () => '{"resumeId":"z","reason":"x"}' })
+    const client = new StructuredClient({ generate: async () => '{"resumeId":"z","reason":"x"}' })
     expect(await pickBase(client, 'jd', [mk('a'), mk('b')])).toBe('a')
   })
 })

@@ -12,7 +12,7 @@ function stripFences(s: string): string {
   return s.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
 }
 
-export class GeminiClient {
+export class StructuredClient {
   constructor(private transport: GenerateTransport) {}
 
   async generateStructured<T>(prompt: string, schema: ZodType<T>): Promise<T> {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { GeminiClient } from '@/lib/ai/gemini'
+import { StructuredClient } from '@/lib/ai/structured-client'
 import { tailorResume } from '@/lib/agents/tailor'
 import type { Resume } from '@/lib/schema/resume'
 
@@ -17,7 +17,7 @@ const modelOut = JSON.stringify({
 
 describe('tailorResume', () => {
   it('validates and forces suggestions to pending', async () => {
-    const client = new GeminiClient({ generate: async () => modelOut })
+    const client = new StructuredClient({ generate: async () => modelOut })
     const r = await tailorResume(client, base, 'JD needs SQL')
     expect(r.suggestions[0].status).toBe('pending')
     expect(r.atsReport.score).toBe(40)
