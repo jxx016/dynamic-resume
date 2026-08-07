@@ -1,19 +1,48 @@
 import { GoogleGenAI } from '@google/genai'
-import { getEnv } from '@/lib/env'
+import OpenAI from 'openai'
+import { getProviderEnv, type Provider } from '@/lib/env'
 
 export interface GenerateTransport { generate(prompt: string): Promise<string> }
 
-export function createRealTransport(): GenerateTransport {
-  const { geminiApiKey, geminiModel } = getEnv()
-  const ai = new GoogleGenAI({ apiKey: geminiApiKey })
+export function createGeminiTransport(): GenerateTransport {
+  const { apiKey, model } = getProviderEnv('gemini')
+  const ai = new GoogleGenAI({ apiKey })
   return {
     async generate(prompt: string) {
       const res = await ai.models.generateContent({
-        model: geminiModel,
+        model,
         contents: prompt,
         config: { responseMimeType: 'application/json' },
       })
       return res.text ?? ''
     },
   }
+}
+
+export function createOpenAiTransport(): GenerateTransport {
+  const { apiKey, model } = getProviderEnv('openai')
+  const openai = new OpenAI({ apiKey })
+  return {
+    async generate(prompt: string) {
+      const res = await openai.responses.create({
+        model,
+        input: prompt,
+        text: { format: { type: 'json_object' } },
+      })
+      return res.output_text ?? ''
+    },
+  }
+}
+
+export function createTransport(provider: Provider): GenerateTransport {
+  return provider === 'openai' ? createOpenAiTransport() : createGeminiTransport()
+}
+
+/**
+ * @deprecated Temporary shim so `src/lib/app-context.ts` (untouched by this task)
+ * keeps compiling after `createRealTransport` was replaced by `createTransport`.
+ * A later task updates that call site and removes this export.
+ */
+export function createRealTransport(): GenerateTransport {
+  return createTransport('gemini')
 }
