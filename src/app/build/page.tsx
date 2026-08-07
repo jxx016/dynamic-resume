@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import type { Resume } from '@/lib/schema/resume'
+import { ProviderPicker } from '@/components/ProviderPicker'
 
 type Turn = { role: 'user' | 'assistant'; text: string }
 
@@ -13,6 +14,7 @@ export default function BuildPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savedId, setSavedId] = useState<string | null>(null)
+  const [provider, setProvider] = useState<string | null>(null)
 
   async function sendMessage() {
     if (!input.trim()) return
@@ -25,7 +27,7 @@ export default function BuildPage() {
       const res = await fetch('/api/builder/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ history: nextHistory, draft }),
+        body: JSON.stringify({ history: nextHistory, draft, provider }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Builder request failed')
@@ -70,6 +72,7 @@ export default function BuildPage() {
         ))}
       </div>
 
+      <ProviderPicker value={provider} onChange={setProvider} disabled={loading} />
       <textarea
         value={input}
         onChange={e => setInput(e.target.value)}

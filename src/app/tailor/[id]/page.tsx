@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import { JdInput } from '@/components/JdInput'
 import { AtsReport } from '@/components/AtsReport'
 import { SuggestionReview } from '@/components/SuggestionReview'
+import { ProviderPicker } from '@/components/ProviderPicker'
 import type { TailoringResult } from '@/lib/schema/tailoring'
 import type { Resume } from '@/lib/schema/resume'
 
@@ -14,6 +15,7 @@ export default function TailorPage() {
   const [finalResume, setFinalResume] = useState<Resume | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [provider, setProvider] = useState<string | null>(null)
 
   async function handleTailor(jdText: string) {
     setLoading(true)
@@ -22,7 +24,7 @@ export default function TailorPage() {
       const res = await fetch('/api/tailor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ baseResumeId, jdText }),
+        body: JSON.stringify({ baseResumeId, jdText, provider }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to tailor resume')
@@ -77,6 +79,7 @@ export default function TailorPage() {
 
       {!finalResume && (
         <>
+          <ProviderPicker value={provider} onChange={setProvider} disabled={loading} />
           <JdInput onSubmit={handleTailor} disabled={loading} />
           {loading && <p>Working…</p>}
           {result && (
