@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { setContextForTest } from '@/lib/app-context'
 import { SqliteResumeStore } from '@/lib/store/sqlite-store'
 import { StructuredClient } from '@/lib/ai/structured-client'
@@ -16,9 +16,20 @@ const modelOut = JSON.stringify({
   atsReport: { jdKeywords: [], matched: [], missing: [], score: 10 },
 })
 
+const OLD = { ...process.env }
+
 beforeEach(() => {
+  // The request below omits `provider`, so the route falls back to the
+  // configured default; give it one key to resolve against.
+  process.env.GEMINI_API_KEY = 'g-key'
   const store = new SqliteResumeStore(':memory:'); store.create(base)
-  setContextForTest({ store, client: new StructuredClient({ generate: async () => modelOut }) })
+  const fakeClient = new StructuredClient({ generate: async () => modelOut })
+  setContextForTest({ store, clientFor: () => fakeClient })
+})
+
+afterEach(() => {
+  setContextForTest(null)
+  process.env = { ...OLD }
 })
 
 describe('POST /api/tailor', () => {

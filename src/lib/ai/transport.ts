@@ -37,12 +37,3 @@ export function createOpenAiTransport(): GenerateTransport {
 export function createTransport(provider: Provider): GenerateTransport {
   return provider === 'openai' ? createOpenAiTransport() : createGeminiTransport()
 }
-
-/**
- * @deprecated Temporary shim so `src/lib/app-context.ts` (untouched by this task)
- * keeps compiling after `createRealTransport` was replaced by `createTransport`.
- * A later task updates that call site and removes this export.
- */
-export function createRealTransport(): GenerateTransport {
-  return createTransport('gemini')
-}

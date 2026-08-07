@@ -15,7 +15,8 @@ let store: SqliteResumeStore
 beforeEach(() => {
   store = new SqliteResumeStore(':memory:')
   store.create(base)
-  setContextForTest({ store, client: new StructuredClient({ generate: async () => '' }) })
+  const fakeClient = new StructuredClient({ generate: async () => '' })
+  setContextForTest({ store, clientFor: () => fakeClient })
 })
 
 describe('PUT /api/resumes/[id]', () => {
