@@ -1,8 +1,8 @@
 'use client'
 import React, { useState } from 'react'
 import Link from 'next/link'
-import type { Resume } from '@/lib/schema/resume'
 import { ProviderPicker } from '@/components/ProviderPicker'
+import type { Resume } from '@/lib/schema/resume'
 
 type Turn = { role: 'user' | 'assistant'; text: string }
 
@@ -11,10 +11,10 @@ export default function BuildPage() {
   const [draft, setDraft] = useState<Resume | null>(null)
   const [input, setInput] = useState('')
   const [label, setLabel] = useState('My Resume')
+  const [provider, setProvider] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savedId, setSavedId] = useState<string | null>(null)
-  const [provider, setProvider] = useState<string | null>(null)
 
   async function sendMessage() {
     if (!input.trim()) return
@@ -61,38 +61,72 @@ export default function BuildPage() {
   }
 
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: '2rem' }}>
-      <h1>Build a resume</h1>
-      <p><Link href="/">Back to library</Link></p>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <main className="page">
+      <header className="masthead">
+        <h1>Build a resume</h1>
+        <span className="tagline"><Link href="/">Back to library</Link></span>
+      </header>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-        {history.map((turn, i) => (
-          <div key={i}><strong>{turn.role}:</strong> {turn.text}</div>
-        ))}
-      </div>
+      {error && <p className="error">{error}</p>}
 
-      <ProviderPicker value={provider} onChange={setProvider} disabled={loading} />
-      <textarea
-        value={input}
-        onChange={e => setInput(e.target.value)}
-        placeholder="Tell the assistant about your experience"
-        rows={4}
-        style={{ width: '100%' }}
-      />
-      <button disabled={loading || !input.trim()} onClick={sendMessage}>Send</button>
+      <section className="section">
+        <ProviderPicker value={provider} onChange={setProvider} disabled={loading} />
+
+        {history.length > 0 && (
+          <div className="stack" style={{ marginBottom: '1rem' }}>
+            {history.map((turn, i) => (
+              <div key={i} className={turn.role === 'user' ? 'sunken' : 'panel'}>
+                <div className="muted" style={{ marginBottom: '0.25rem' }}>
+                  {turn.role === 'user' ? 'You' : 'Assistant'}
+                </div>
+                <div>{turn.text}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="panel">
+          <div className="field">
+            <label htmlFor="builder-input">Tell the assistant about your experience</label>
+            <textarea
+              id="builder-input"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="I was a product manager at Acme for three years…"
+              rows={4}
+            />
+          </div>
+          <button disabled={loading || !input.trim()} onClick={sendMessage}>
+            {loading ? 'Thinking…' : 'Send'}
+          </button>
+        </div>
+      </section>
 
       {draft && (
-        <div style={{ marginTop: '2rem' }}>
+        <section className="section">
           <h2>Current draft</h2>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(draft, null, 2)}</pre>
-          <input value={label} onChange={e => setLabel(e.target.value)} placeholder="Label for this resume" />
-          <button disabled={loading} onClick={saveAsBaseResume}>Save as base resume</button>
-        </div>
+          <p className="section-hint">Saved as a base resume you can tailor to any job.</p>
+          <div className="panel">
+            <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem', maxHeight: 320, overflow: 'auto' }}>
+              {JSON.stringify(draft, null, 2)}
+            </pre>
+            <hr className="divider" />
+            <div className="field">
+              <label htmlFor="builder-label">Label</label>
+              <input
+                id="builder-label"
+                value={label}
+                onChange={e => setLabel(e.target.value)}
+                placeholder="PM roles"
+              />
+            </div>
+            <button disabled={loading} onClick={saveAsBaseResume}>Save as base resume</button>
+          </div>
+        </section>
       )}
 
       {savedId && (
-        <p>
+        <p className="muted">
           Saved. <Link href={`/tailor/${savedId}`}>Tailor this resume</Link>
         </p>
       )}

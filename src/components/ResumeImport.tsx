@@ -58,20 +58,20 @@ export function ResumeImport({ onImported }: { onImported: (id: string) => void 
   }
 
   return (
-    <section>
+    <section className="panel">
       <ProviderPicker value={provider} onChange={setProvider} disabled={busy} />
 
-      <div>
+      <div className="field">
         <label htmlFor="import-label">Label</label>
         <input
           id="import-label"
           value={label}
           onChange={e => setLabel(e.target.value)}
-          placeholder="e.g. PM roles"
+          placeholder="PM roles"
         />
       </div>
 
-      <div>
+      <div className="field">
         <label htmlFor="import-file">Upload a PDF or DOCX</label>
         <input
           id="import-file"
@@ -81,17 +81,18 @@ export function ResumeImport({ onImported }: { onImported: (id: string) => void 
         />
       </div>
 
-      <div>
+      <div className="field">
         <label htmlFor="import-text">Or paste your resume text</label>
         <textarea
           id="import-text"
           value={text}
           onChange={e => setText(e.target.value)}
-          rows={8}
+          rows={7}
+          placeholder="Jo Candidate&#10;jo@example.com"
         />
       </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="error">{error}</p>}
 
       <button disabled={busy || !canImport} onClick={handleImport}>
         {busy ? 'Importing…' : 'Import resume'}

@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { JdInput } from '@/components/JdInput'
 import { AtsReport } from '@/components/AtsReport'
@@ -73,29 +74,42 @@ export default function TailorPage() {
   }
 
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: '2rem' }}>
-      <h1>Tailor resume {baseResumeId}</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <main className="page">
+      <header className="masthead">
+        <h1>Tailor resume</h1>
+        <span className="tagline"><Link href="/">Back to library</Link></span>
+      </header>
+
+      {error && <p className="error">{error}</p>}
 
       {!finalResume && (
         <>
-          <ProviderPicker value={provider} onChange={setProvider} disabled={loading} />
-          <JdInput onSubmit={handleTailor} disabled={loading} />
-          {loading && <p>Working…</p>}
+          <section className="section">
+            <ProviderPicker value={provider} onChange={setProvider} disabled={loading} />
+            <JdInput onSubmit={handleTailor} disabled={loading} />
+            {loading && <p className="muted" style={{ marginTop: '0.75rem' }}>Working…</p>}
+          </section>
+
           {result && (
-            <>
+            <section className="section">
               <AtsReport report={result.atsReport} />
               <SuggestionReview suggestions={result.suggestions} onConfirm={handleConfirm} />
-            </>
+            </section>
           )}
         </>
       )}
 
       {finalResume && (
-        <div>
-          <p>Tailored resume saved as {finalResume.id}.</p>
-          <button onClick={handleDownload}>Download PDF</button>
-        </div>
+        <section className="section">
+          <div className="panel">
+            <h2>Your tailored resume is ready</h2>
+            <p className="section-hint">Saved as {finalResume.id}.</p>
+            <button onClick={handleDownload}>Download PDF</button>
+          </div>
+          <p className="muted" style={{ marginTop: '1rem' }}>
+            <Link href="/">Back to library</Link>
+          </p>
+        </section>
       )}
     </main>
   )
