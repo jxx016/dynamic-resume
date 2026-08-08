@@ -18,6 +18,14 @@ describe('prompts', () => {
   it('importPrompt embeds the raw text', () => {
     expect(importPrompt('RAW RESUME TEXT')).toContain('RAW RESUME TEXT')
   })
+
+  // Regression: the model intermittently returned only some roles, silently
+  // dropping work history. Same input gave 1 role on one run and 4 on the next.
+  it('importPrompt demands every role, with no summarising or merging', () => {
+    const p = importPrompt('x').toLowerCase()
+    expect(p).toMatch(/every (single )?(role|position|job)/)
+    expect(p).toMatch(/do not (omit|summar|merge|skip)/)
+  })
   it('pickPrompt lists candidate labels', () => {
     expect(pickPrompt('jd', [{ id: 'a', label: 'PM', summary: 's' }])).toContain('PM')
   })

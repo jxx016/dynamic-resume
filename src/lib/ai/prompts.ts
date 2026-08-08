@@ -7,7 +7,14 @@ const HONESTY = `Rules:
 
 export function importPrompt(rawText: string): string {
   return `Convert the following resume text into a Resume JSON object (fields: basics, summary, ` +
-    `experience, education, skills, projects). Give every bullet a unique "id". ` +
+    `experience, education, skills, projects). Give every bullet a unique "id".\n\n` +
+    `Completeness is mandatory — this is a transcription, not a summary:\n` +
+    `- Include EVERY role/position in the text, even old or brief ones. Do not omit, summarise, ` +
+    `merge, or truncate entries. If the text lists six jobs, return six experience entries.\n` +
+    `- Include every bullet under each role, and every school, project, and skill.\n` +
+    `- Copy the candidate's wording; do not rewrite or improve it here.\n\n` +
+    `Before writing the JSON, count the distinct roles/positions in the text and put that ` +
+    `number in "sourceRoleCount". The "experience" array must contain exactly that many entries.\n\n` +
     `Reply with ONLY the JSON.\n\n--- RESUME TEXT ---\n${rawText}`
 }
 

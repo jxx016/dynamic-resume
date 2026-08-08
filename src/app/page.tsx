@@ -23,7 +23,12 @@ export default function Home() {
           </p>
         ) : (
           <>
-            <p className="section-hint">{resumes.length} saved</p>
+            <p className="section-hint">
+              Check the counts below match your real resume — if a role is missing, re-import.
+              Then hit <strong>Tailor</strong>, paste a job description, and you&apos;ll get a
+              keyword report, suggested additions to approve, and a downloadable PDF.
+              Tailoring takes around 30 seconds.
+            </p>
             <div className="stack">
               {resumes.map(r => <ResumeCard key={r.id} resume={r} />)}
             </div>
