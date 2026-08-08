@@ -1,12 +1,14 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --link: #0056b3;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --link: #7cb7f0;
   }
 }
 
@@ -38,8 +40,39 @@ body {
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+  color: var(--link);
+  text-decoration: underline;
+}
+
+/* The `* { margin: 0 }` reset above strips heading spacing; restore enough to read. */
+h1,
+h2 {
+  margin-bottom: 0.5rem;
+}
+
+label {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+input[type='text'],
+input:not([type]),
+textarea {
+  width: 100%;
+  padding: 0.4rem;
+  font: inherit;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 @media (prefers-color-scheme: dark) {
