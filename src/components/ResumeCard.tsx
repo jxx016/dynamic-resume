@@ -19,7 +19,9 @@ export function ResumeCard({ resume }: { resume: Resume }) {
   return (
     <div className="card">
       <div>
-        <div className="card-title">{resume.label}</div>
+        <div className="card-title">
+          <Link href={`/resumes/${resume.id}`}>{resume.label}</Link>
+        </div>
         <div className="card-meta">
           {resume.basics.name || 'Untitled'}
           {' · '}
@@ -27,7 +29,10 @@ export function ResumeCard({ resume }: { resume: Resume }) {
         </div>
         <div className="card-meta">{captured}</div>
       </div>
-      <Link className="action" href={`/tailor/${resume.id}`}>Tailor</Link>
+      <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+        <Link className="action secondary" href={`/resumes/${resume.id}`}>View</Link>
+        <Link className="action" href={`/tailor/${resume.id}`}>Tailor</Link>
+      </div>
     </div>
   )
 }

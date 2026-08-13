@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { setContextForTest } from '@/lib/app-context'
 import { SqliteResumeStore } from '@/lib/store/sqlite-store'
 import { StructuredClient } from '@/lib/ai/structured-client'
-import { PUT } from '@/app/api/resumes/[id]/route'
+import { PUT, DELETE } from '@/app/api/resumes/[id]/route'
 import type { Resume } from '@/lib/schema/resume'
 
 const base = { id: 'a', label: 'x', isBase: true,
@@ -36,6 +36,23 @@ describe('PUT /api/resumes/[id]', () => {
       method: 'PUT', body: JSON.stringify({ ...base, id: 'missing' }),
     })
     const res = await PUT(req, { params: Promise.resolve({ id: 'missing' }) })
+    expect(res.status).toBe(404)
+  })
+})
+
+describe('DELETE /api/resumes/[id]', () => {
+  it('removes an existing resume and returns 204', async () => {
+    const res = await DELETE(new Request('http://t/api/resumes/a', { method: 'DELETE' }), {
+      params: Promise.resolve({ id: 'a' }),
+    })
+    expect(res.status).toBe(204)
+    expect(store.get('a')).toBeNull()
+  })
+
+  it('returns 404 for a nonexistent id', async () => {
+    const res = await DELETE(new Request('http://t/api/resumes/missing', { method: 'DELETE' }), {
+      params: Promise.resolve({ id: 'missing' }),
+    })
     expect(res.status).toBe(404)
   })
 })

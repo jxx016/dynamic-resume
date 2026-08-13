@@ -26,7 +26,7 @@ describe('ResumeImport', () => {
     const onImported = vi.fn()
     render(<ResumeImport onImported={onImported} />)
 
-    fireEvent.change(screen.getByLabelText(/label/i), { target: { value: 'PM roles' } })
+    fireEvent.change(screen.getByLabelText(/name this resume/i), { target: { value: 'PM roles' } })
     fireEvent.change(screen.getByLabelText(/paste/i), { target: { value: 'Jo Candidate\nPM at Acme' } })
     fireEvent.click(screen.getByRole('button', { name: /import/i }))
 

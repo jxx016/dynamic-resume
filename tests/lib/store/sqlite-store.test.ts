@@ -22,4 +22,12 @@ describe('SqliteResumeStore', () => {
     expect(store.update('a', updated).label).toBe('changed')
     expect(store.get('missing')).toBeNull()
   })
+
+  it('deletes an existing resume and reports whether one was removed', () => {
+    const store = new SqliteResumeStore(':memory:')
+    store.create(sample('a'))
+    expect(store.delete('a')).toBe(true)
+    expect(store.get('a')).toBeNull()
+    expect(store.delete('a')).toBe(false)
+  })
 })

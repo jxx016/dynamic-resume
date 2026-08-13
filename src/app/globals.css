@@ -199,6 +199,13 @@ button.secondary:hover:not(:disabled) { background: var(--accent-tint); }
 }
 .action:hover { color: var(--on-accent); background: var(--accent-hover); }
 
+.action.secondary {
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+}
+.action.secondary:hover { color: var(--accent); background: var(--accent-tint); }
+
 .error {
   color: var(--danger);
   background: var(--danger-tint);

@@ -5,4 +5,5 @@ export interface ResumeStore {
   get(id: string): Resume | null
   create(r: Resume): Resume
   update(id: string, r: Resume): Resume
+  delete(id: string): boolean
 }

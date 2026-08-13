@@ -62,12 +62,14 @@ export function ResumeImport({ onImported }: { onImported: (id: string) => void 
       <ProviderPicker value={provider} onChange={setProvider} disabled={busy} />
 
       <div className="field">
-        <label htmlFor="import-label">Label</label>
+        <label htmlFor="import-label">
+          Name this resume <span className="muted">(just for your library — it won&apos;t change the content)</span>
+        </label>
         <input
           id="import-label"
           value={label}
           onChange={e => setLabel(e.target.value)}
-          placeholder="PM roles"
+          placeholder="e.g. My general resume"
         />
       </div>
 

@@ -112,12 +112,14 @@ export default function BuildPage() {
             </pre>
             <hr className="divider" />
             <div className="field">
-              <label htmlFor="builder-label">Label</label>
+              <label htmlFor="builder-label">
+                Name this resume <span className="muted">(just for your library)</span>
+              </label>
               <input
                 id="builder-label"
                 value={label}
                 onChange={e => setLabel(e.target.value)}
-                placeholder="PM roles"
+                placeholder="e.g. My general resume"
               />
             </div>
             <button disabled={loading} onClick={saveAsBaseResume}>Save as base resume</button>

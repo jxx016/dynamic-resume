@@ -25,4 +25,7 @@ export class SqliteResumeStore implements ResumeStore {
     this.db.prepare('UPDATE resumes SET data = ? WHERE id = ?').run(JSON.stringify(v), id)
     return v
   }
+  delete(id: string): boolean {
+    return this.db.prepare('DELETE FROM resumes WHERE id = ?').run(id).changes > 0
+  }
 }
