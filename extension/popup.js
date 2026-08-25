@@ -1,4 +1,5 @@
 import { extractJd } from './extract-jd.js'
+import { autofillFields } from './autofill-fields.js'
 
 const APP_ORIGIN = 'http://localhost:3000'
 const LAST_RESUME_KEY = 'lastResumeId'
@@ -9,14 +10,25 @@ const selectionBtn = document.getElementById('selection-btn')
 const jdText = document.getElementById('jd-text')
 const openBtn = document.getElementById('open-btn')
 const status = document.getElementById('status')
+const autofillBtn = document.getElementById('autofill-btn')
+const autofillStatus = document.getElementById('autofill-status')
 
 function setStatus(message, isError = false) {
   status.textContent = message
   status.className = isError ? 'error' : ''
 }
 
+function setAutofillStatus(message, isError = false) {
+  autofillStatus.textContent = message
+  autofillStatus.className = isError ? 'error' : ''
+}
+
 function updateOpenButton() {
   openBtn.disabled = !resumeSelect.value || jdText.value.trim().length === 0
+}
+
+function updateAutofillButton() {
+  autofillBtn.disabled = !resumeSelect.value
 }
 
 async function getActiveTab() {
@@ -36,6 +48,41 @@ function setTextareaValue(text) {
   return true
 }
 
+// This-page detection: a page "is a job posting" exactly when extractJd can
+// find job-description-shaped content on it — reusing that function as the
+// detection signal avoids maintaining a second, possibly-disagreeing
+// heuristic. Runs once automatically when the popup opens, after
+// loadResumes — see the `showStatus` param for why.
+async function detectJobPage(showStatus) {
+  try {
+    const tab = await getActiveTab()
+    const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: extractJd })
+    if (result) {
+      jdText.value = result
+      jdText.placeholder = ''
+      if (showStatus) setStatus('Looks like a job posting — check the captured text, then continue.')
+    } else {
+      jdText.placeholder = 'Click "Grab job description" above'
+      if (showStatus) {
+        setStatus('Doesn\'t look like a job posting from here — try Grab, or highlight the description on the page and use "Use selected text".')
+      }
+      selectionBtn.style.display = 'block'
+      selectionBtn.disabled = false
+    }
+  } catch {
+    jdText.placeholder = 'Click "Grab job description" above'
+    if (showStatus) {
+      setStatus('Can\'t read this page — try highlighting the job description and using "Use selected text".', true)
+    }
+    selectionBtn.style.display = 'block'
+    selectionBtn.disabled = false
+  }
+  updateOpenButton()
+}
+
+// Returns true once the app is reachable and has resumes to work with —
+// i.e. once detectJobPage's status message is safe to show without
+// burying a more foundational problem (dev server down, no resumes yet).
 async function loadResumes() {
   try {
     const res = await fetch(`${APP_ORIGIN}/api/resumes`)
@@ -44,7 +91,7 @@ async function loadResumes() {
 
     if (!Array.isArray(resumes) || resumes.length === 0) {
       setStatus('No resumes yet — import one in Dynamic Resume first.', true)
-      return
+      return false
     }
 
     const { [LAST_RESUME_KEY]: lastId } = await chrome.storage.local.get(LAST_RESUME_KEY)
@@ -59,9 +106,12 @@ async function loadResumes() {
 
     resumeSelect.disabled = false
     grabBtn.disabled = false
-    setStatus('')
+    updateOpenButton()
+    updateAutofillButton()
+    return true
   } catch {
     setStatus(`Can't reach Dynamic Resume — is "npm run dev" running?`, true)
+    return false
   }
 }
 
@@ -140,7 +190,42 @@ openBtn.addEventListener('click', async () => {
   chrome.tabs.onUpdated.addListener(onUpdated)
 })
 
-jdText.addEventListener('input', updateOpenButton)
-resumeSelect.addEventListener('change', updateOpenButton)
+autofillBtn.addEventListener('click', async () => {
+  const resumeId = resumeSelect.value
+  if (!resumeId) return
 
-loadResumes()
+  setAutofillStatus('Filling in what we can find…')
+  try {
+    const res = await fetch(`${APP_ORIGIN}/api/resumes/${resumeId}`)
+    if (!res.ok) throw new Error(`status ${res.status}`)
+    const resume = await res.json()
+
+    const tab = await getActiveTab()
+    const [{ result }] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: autofillFields,
+      args: [resume.basics],
+    })
+
+    const filled = Object.entries(result).filter(([, ok]) => ok).map(([field]) => field)
+    const missed = Object.entries(result).filter(([, ok]) => !ok).map(([field]) => field)
+    if (filled.length === 0) {
+      setAutofillStatus("Couldn't find any matching fields on this page — fill it in yourself.", true)
+    } else if (missed.length === 0) {
+      setAutofillStatus(`Filled: ${filled.join(', ')}.`)
+    } else {
+      setAutofillStatus(`Filled: ${filled.join(', ')}. Couldn't find: ${missed.join(', ')}.`)
+    }
+  } catch {
+    setAutofillStatus("Couldn't fill fields on this page — check the app is running and try again.", true)
+  }
+})
+
+jdText.addEventListener('input', updateOpenButton)
+resumeSelect.addEventListener('change', () => { updateOpenButton(); updateAutofillButton() })
+
+async function init() {
+  const ready = await loadResumes()
+  await detectJobPage(ready)
+}
+init()

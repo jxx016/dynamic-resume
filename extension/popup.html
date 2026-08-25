@@ -32,8 +32,9 @@
   }
   button:disabled { opacity: 0.45; cursor: not-allowed; }
   button.secondary { background: transparent; color: #477055; border-color: #d5d4cd; }
-  #status { margin-top: 8px; font-size: 12px; color: #78776f; }
-  #status.error { color: #9c3a2c; }
+  #status, #autofill-status { margin-top: 8px; font-size: 12px; color: #78776f; }
+  #status.error, #autofill-status.error { color: #9c3a2c; }
+  hr { border: 0; border-top: 1px solid #e5e4df; margin: 14px 0; }
 </style>
 </head>
 <body>
@@ -46,11 +47,16 @@
   <button id="selection-btn" class="secondary" disabled style="display:none;">Use selected text instead</button>
 
   <label for="jd-text">Captured text (check it before continuing)</label>
-  <textarea id="jd-text" placeholder="Click &quot;Grab job description&quot; above"></textarea>
+  <textarea id="jd-text" placeholder="Checking this page…"></textarea>
 
   <button id="open-btn" disabled>Open in Dynamic Resume</button>
 
   <p id="status"></p>
+
+  <hr>
+
+  <button id="autofill-btn" class="secondary" disabled>Autofill name/email/phone on this page</button>
+  <p id="autofill-status"></p>
 
   <script type="module" src="popup.js"></script>
 </body>

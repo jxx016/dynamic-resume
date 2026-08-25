@@ -1,9 +1,16 @@
-# Dynamic Resume — JD capture extension
+# Dynamic Resume — browser extension
 
-Grabs the job description off the page you're viewing and opens it in the
-Dynamic Resume web app, pre-filled, so you skip copy-paste. This is the
-capture-and-handoff piece only — no autofill of application forms yet
-(that's a separate, later piece).
+Two things, both deterministic (no AI runs inside the extension itself —
+it only talks to the Dynamic Resume web app's existing API):
+
+1. **JD capture.** Detects whether the page you're on looks like a job
+   posting and grabs the job description, then opens it in the Dynamic
+   Resume web app, pre-filled, so you skip copy-paste.
+2. **Field autofill.** Fills in name/email/phone/location text fields on an
+   application form from your selected resume. It does **not** attach the
+   resume file itself — browsers block scripts from setting a file input's
+   value, and always will (a security boundary, not a gap in this build).
+   Download the PDF from the tailor flow and attach it yourself.
 
 ## Load it
 
@@ -15,26 +22,39 @@ capture-and-handoff piece only — no autofill of application forms yet
 
 ## Use it
 
-1. Open a real job posting in a tab.
-2. Click the extension icon.
-3. Pick which of your saved resumes to tailor.
-4. Click **Grab job description**.
-5. **Read what it captured before continuing** — this step matters. The
-   detection is best-effort and can grab the wrong section, especially on
-   sites it wasn't tested against.
-   - If it looks wrong or empty: highlight the job description on the page
-     yourself, then click **Use selected text instead**.
-6. Click **Open in Dynamic Resume** — a new tab opens with the job description
-   already filled in. From there it's the same flow as always: Tailor →
-   review the ATS report and suggestions → download.
+1. Open a real job posting in a tab, then click the extension icon.
+2. **The popup automatically checks whether this page looks like a job
+   posting** and, if so, pre-fills the captured text for you.
+   - If it doesn't look like one, or the capture looks wrong, highlight the
+     job description on the page yourself and click **Use selected text
+     instead** — or click **Grab job description** to retry (useful on
+     pages that finish loading content after the popup first checked).
+3. Pick which of your saved resumes to tailor, then **read the captured
+   text before continuing** — detection is best-effort and can grab the
+   wrong section, especially on sites it wasn't tested against.
+4. Click **Open in Dynamic Resume** — a new tab opens with the job
+   description already filled in. From there it's the same flow as
+   always: Tailor → review the ATS report and suggestions → download.
+5. Separately, whenever you're on the actual application form (often the
+   same page, below the JD, on sites like Greenhouse), click **Autofill
+   name/email/phone on this page**. It tells you which fields it found and
+   which it didn't — check its work before submitting.
 
 ## Known limitations (by design, not bugs)
 
 - **LinkedIn and similar dynamic/login-gated sites will likely fail to
-  auto-capture.** Use the manual-selection fallback there.
-- The known-site selectors (Greenhouse-, Lever-style class patterns) are
-  best-effort guesses, not verified against live pages. Expect to need
-  the manual-selection fallback on postings they don't match yet.
+  auto-capture, and their forms likely won't autofill either.** Use the
+  manual-selection fallback for JD capture; fill the form yourself.
+- The known-site selectors (Greenhouse-, Lever-style class patterns, and
+  the autofill field-matching patterns) are best-effort guesses, not
+  verified against every live page. Expect to need the manual fallbacks
+  on sites they don't match yet.
+- Autofill never invents data — it only fills a field with your resume's
+  own contact info, and only when it's reasonably confident it found the
+  right field. A field it can't confidently identify is left alone rather
+  than guessed at.
+- The resume file itself can never be auto-attached to a file upload
+  field — this is a browser security restriction with no workaround.
 - If `npm run dev` isn't running, the popup will tell you it can't reach
   the app — start the dev server and reopen the popup.
 - If you have no resumes imported yet, import one in the web app first.
