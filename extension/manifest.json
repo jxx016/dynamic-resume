@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Dynamic Resume — JD capture",
   "version": "0.1.0",
-  "description": "Grabs the job description off the page you're on and opens it in Dynamic Resume for tailoring.",
+  "description": "Captures a job posting, including relevant collapsed sections, and creates a tailored resume in Dynamic Resume.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Tailor my resume to this job"

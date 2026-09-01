@@ -1,0 +1,38 @@
+// @vitest-environment jsdom
+import { describe, expect, it } from 'vitest'
+import { prepareJobPage } from '../../extension/prepare-job-page.js'
+
+function docFrom(html: string): Document {
+  return new DOMParser().parseFromString(html, 'text/html')
+}
+
+describe('prepareJobPage', () => {
+  it('opens Qualifications and captures it without unrelated collapsed sections', async () => {
+    const doc = docFrom(`
+      <main>
+        <h1>Solution Architect</h1>
+        <h2>Job Description</h2>
+        <p>Design end-to-end technology solutions for clients and lead architecture workshops.</p>
+        <button id="qualifications" aria-expanded="false">Qualification</button>
+        <section id="qualification-content" hidden>
+          <p>Three years of solution architecture experience with AWS, Azure, or GCP.</p>
+        </section>
+        <button id="locations" aria-expanded="false">Locations</button>
+        <section id="location-content" hidden><p>Singapore</p></section>
+        <h2>Additional Information</h2>
+        <p>Equal employment opportunity statement.</p>
+      </main>
+    `)
+    doc.getElementById('qualifications')?.addEventListener('click', () => {
+      doc.getElementById('qualifications')?.setAttribute('aria-expanded', 'true')
+      doc.getElementById('qualification-content')?.removeAttribute('hidden')
+    })
+
+    const text = await prepareJobPage(doc)
+
+    expect(text).toContain('Design end-to-end technology solutions')
+    expect(text).toContain('AWS, Azure, or GCP')
+    expect(text).not.toContain('Singapore')
+    expect(text).not.toContain('Equal employment opportunity')
+  })
+})

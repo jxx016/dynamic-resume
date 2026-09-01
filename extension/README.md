@@ -3,14 +3,16 @@
 Two things, both deterministic (no AI runs inside the extension itself —
 it only talks to the Dynamic Resume web app's existing API):
 
-1. **JD capture.** Detects whether the page you're on looks like a job
-   posting and grabs the job description, then opens it in the Dynamic
-   Resume web app, pre-filled, so you skip copy-paste.
+1. **Per-job resume generation.** Detects whether the page you're on looks
+   like a job posting, expands relevant closed sections such as
+   Qualifications, and captures the job description. After your quick
+   confirmation, it creates a new tailored-resume application in the web
+   app — one distinct version for that job.
 2. **Field autofill.** Fills in name/email/phone/location text fields on an
    application form from your selected resume. It does **not** attach the
    resume file itself — browsers block scripts from setting a file input's
    value, and always will (a security boundary, not a gap in this build).
-   Download the PDF from the tailor flow and attach it yourself.
+   Download the finalized PDF and attach it yourself.
 
 ## Load it
 
@@ -32,9 +34,10 @@ it only talks to the Dynamic Resume web app's existing API):
 3. Pick which of your saved resumes to tailor, then **read the captured
    text before continuing** — detection is best-effort and can grab the
    wrong section, especially on sites it wasn't tested against.
-4. Click **Open in Dynamic Resume** — a new tab opens with the job
-   description already filled in. From there it's the same flow as
-   always: Tailor → review the ATS report and suggestions → download.
+4. Click **Generate tailored resume**. The app creates a saved application
+   tied to this job URL and begins generating a new, truthful resume version.
+   Review the ATS coverage and any proposed experience gaps, then accept or
+   reject them before saving and downloading the final PDF.
 5. Separately, whenever you're on the actual application form (often the
    same page, below the JD, on sites like Greenhouse), click **Autofill
    name/email/phone on this page**. It tells you which fields it found and
@@ -58,6 +61,8 @@ it only talks to the Dynamic Resume web app's existing API):
 - If `npm run dev` isn't running, the popup will tell you it can't reach
   the app — start the dev server and reopen the popup.
 - If you have no resumes imported yet, import one in the web app first.
+- The extension uses the app's configured default OpenAI or Gemini provider.
+  Add at least one valid key before generating.
 
 ## Why no build step
 

@@ -1,4 +1,4 @@
-import { extractJd } from './extract-jd.js'
+import { prepareJobPage } from './prepare-job-page.js'
 import { autofillFields } from './autofill-fields.js'
 
 const APP_ORIGIN = 'http://localhost:3000'
@@ -8,10 +8,11 @@ const resumeSelect = document.getElementById('resume-select')
 const grabBtn = document.getElementById('grab-btn')
 const selectionBtn = document.getElementById('selection-btn')
 const jdText = document.getElementById('jd-text')
-const openBtn = document.getElementById('open-btn')
+const generateBtn = document.getElementById('generate-btn')
 const status = document.getElementById('status')
 const autofillBtn = document.getElementById('autofill-btn')
 const autofillStatus = document.getElementById('autofill-status')
+let defaultProvider = null
 
 function setStatus(message, isError = false) {
   status.textContent = message
@@ -23,8 +24,8 @@ function setAutofillStatus(message, isError = false) {
   autofillStatus.className = isError ? 'error' : ''
 }
 
-function updateOpenButton() {
-  openBtn.disabled = !resumeSelect.value || jdText.value.trim().length === 0
+function updateGenerateButton() {
+  generateBtn.disabled = !resumeSelect.value || jdText.value.trim().length === 0 || !defaultProvider
 }
 
 function updateAutofillButton() {
@@ -36,27 +37,12 @@ async function getActiveTab() {
   return tab
 }
 
-// Runs inside the target page, not popup.js — must be fully self-contained
-// (only its own parameter and the page's own globals), since
-// chrome.scripting re-executes just this function's source there.
-function setTextareaValue(text) {
-  const el = document.getElementById('jd-text')
-  if (!el) return false
-  const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set
-  nativeSetter.call(el, text)
-  el.dispatchEvent(new Event('input', { bubbles: true }))
-  return true
-}
-
-// This-page detection: a page "is a job posting" exactly when extractJd can
-// find job-description-shaped content on it — reusing that function as the
-// detection signal avoids maintaining a second, possibly-disagreeing
-// heuristic. Runs once automatically when the popup opens, after
-// loadResumes — see the `showStatus` param for why.
+// This-page detection expands relevant closed job-content sections first, then
+// captures the result for the user to quickly confirm before generation.
 async function detectJobPage(showStatus) {
   try {
     const tab = await getActiveTab()
-    const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: extractJd })
+    const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: prepareJobPage })
     if (result) {
       jdText.value = result
       jdText.placeholder = ''
@@ -77,7 +63,7 @@ async function detectJobPage(showStatus) {
     selectionBtn.style.display = 'block'
     selectionBtn.disabled = false
   }
-  updateOpenButton()
+  updateGenerateButton()
 }
 
 // Returns true once the app is reachable and has resumes to work with —
@@ -88,9 +74,17 @@ async function loadResumes() {
     const res = await fetch(`${APP_ORIGIN}/api/resumes`)
     if (!res.ok) throw new Error(`status ${res.status}`)
     const resumes = await res.json()
+    const providerResponse = await fetch(`${APP_ORIGIN}/api/providers`)
+    if (!providerResponse.ok) throw new Error(`provider status ${providerResponse.status}`)
+    const providers = await providerResponse.json()
+    defaultProvider = typeof providers.default === 'string' ? providers.default : null
 
     if (!Array.isArray(resumes) || resumes.length === 0) {
       setStatus('No resumes yet — import one in Dynamic Resume first.', true)
+      return false
+    }
+    if (!defaultProvider) {
+      setStatus('No AI provider is configured — add an OpenAI or Gemini key in Dynamic Resume first.', true)
       return false
     }
 
@@ -106,7 +100,7 @@ async function loadResumes() {
 
     resumeSelect.disabled = false
     grabBtn.disabled = false
-    updateOpenButton()
+    updateGenerateButton()
     updateAutofillButton()
     return true
   } catch {
@@ -119,7 +113,7 @@ grabBtn.addEventListener('click', async () => {
   setStatus('Reading the page…')
   try {
     const tab = await getActiveTab()
-    const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: extractJd })
+    const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: prepareJobPage })
     if (result) {
       jdText.value = result
       selectionBtn.style.display = 'none'
@@ -134,7 +128,7 @@ grabBtn.addEventListener('click', async () => {
     selectionBtn.style.display = 'block'
     selectionBtn.disabled = false
   }
-  updateOpenButton()
+  updateGenerateButton()
 })
 
 selectionBtn.addEventListener('click', async () => {
@@ -154,40 +148,38 @@ selectionBtn.addEventListener('click', async () => {
   } catch {
     setStatus("Couldn't read the selection on that page.", true)
   }
-  updateOpenButton()
+  updateGenerateButton()
 })
 
-openBtn.addEventListener('click', async () => {
+generateBtn.addEventListener('click', async () => {
   const resumeId = resumeSelect.value
   const text = jdText.value.trim()
-  if (!resumeId || !text) return
+  if (!resumeId || !text || !defaultProvider) return
 
   await chrome.storage.local.set({ [LAST_RESUME_KEY]: resumeId })
-  setStatus('Opening Dynamic Resume…')
-
-  const newTab = await chrome.tabs.create({ url: `${APP_ORIGIN}/tailor/${resumeId}` })
-
-  let injected = false
-  const inject = async () => {
-    if (injected) return
-    injected = true
-    try {
-      await chrome.scripting.executeScript({ target: { tabId: newTab.id }, func: setTextareaValue, args: [text] })
-      setStatus('Done — the job description is filled in over there.')
-    } catch {
-      setStatus('Opened the tab, but the paste-in step failed — paste the JD there manually.', true)
-    }
+  generateBtn.disabled = true
+  setStatus('Creating a tailored resume for this job…')
+  try {
+    const tab = await getActiveTab()
+    const response = await fetch(`${APP_ORIGIN}/api/applications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        baseResumeId: resumeId,
+        jdText: text,
+        provider: defaultProvider,
+        job: { url: tab.url || '', title: tab.title || 'Job application' },
+      }),
+    })
+    const application = await response.json()
+    if (!response.ok) throw new Error(application.error || 'Could not create application')
+    await chrome.tabs.create({ url: `${APP_ORIGIN}/applications/${application.id}` })
+    setStatus('Generating your tailored resume in Dynamic Resume…')
+  } catch (error) {
+    setStatus((error instanceof Error ? error.message : 'Could not create tailored resume'), true)
+  } finally {
+    updateGenerateButton()
   }
-
-  const timeout = setTimeout(inject, 4000)
-  function onUpdated(tabId, changeInfo) {
-    if (tabId === newTab.id && changeInfo.status === 'complete') {
-      chrome.tabs.onUpdated.removeListener(onUpdated)
-      clearTimeout(timeout)
-      inject()
-    }
-  }
-  chrome.tabs.onUpdated.addListener(onUpdated)
 })
 
 autofillBtn.addEventListener('click', async () => {
@@ -221,8 +213,8 @@ autofillBtn.addEventListener('click', async () => {
   }
 })
 
-jdText.addEventListener('input', updateOpenButton)
-resumeSelect.addEventListener('change', () => { updateOpenButton(); updateAutofillButton() })
+jdText.addEventListener('input', updateGenerateButton)
+resumeSelect.addEventListener('change', () => { updateGenerateButton(); updateAutofillButton() })
 
 async function init() {
   const ready = await loadResumes()

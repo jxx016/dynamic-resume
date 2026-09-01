@@ -8,5 +8,6 @@ export function openDb(dbPath: string) {
   }
   const db = new Database(dbPath)
   db.exec(`CREATE TABLE IF NOT EXISTS resumes (id TEXT PRIMARY KEY, data TEXT NOT NULL)`)
+  db.exec(`CREATE TABLE IF NOT EXISTS applications (id TEXT PRIMARY KEY, data TEXT NOT NULL)`)
   return db
 }
