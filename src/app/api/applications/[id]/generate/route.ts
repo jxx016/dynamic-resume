@@ -16,7 +16,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
 
   const generating = applications.update(id, { ...application, status: 'generating', error: undefined, updatedAt: nowIso(() => new Date()) })
   try {
-    const tailoringResult = await tailorResume(clientFor(generating.provider), base, generating.jdText)
+    const tailoringResult = await tailorResume(clientFor(generating.provider), base, generating.jdText, generating.tailoringInstructions)
     return NextResponse.json(applications.update(id, {
       ...generating,
       status: 'ready',

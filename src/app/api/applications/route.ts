@@ -10,6 +10,9 @@ export async function POST(req: Request) {
   if (!body.baseResumeId || !body.jdText?.trim() || !body.job?.url || !body.job?.title) {
     return NextResponse.json({ error: 'baseResumeId, job URL/title, and jdText are required' }, { status: 400 })
   }
+  if (body.tailoringInstructions !== undefined && (typeof body.tailoringInstructions !== 'string' || body.tailoringInstructions.trim().length > 1000)) {
+    return NextResponse.json({ error: 'tailoringInstructions must be at most 1000 characters' }, { status: 400 })
+  }
 
   const { store, applications } = getContext()
   if (!store.get(body.baseResumeId)) return NextResponse.json({ error: 'base resume not found' }, { status: 404 })
@@ -20,6 +23,7 @@ export async function POST(req: Request) {
     baseResumeId: body.baseResumeId,
     job: { url: body.job.url, title: body.job.title },
     jdText: body.jdText.trim(),
+    tailoringInstructions: body.tailoringInstructions?.trim() || undefined,
     provider: provider.data,
     status: 'draft',
     createdAt: timestamp,

@@ -8,6 +8,7 @@ const resumeSelect = document.getElementById('resume-select')
 const grabBtn = document.getElementById('grab-btn')
 const selectionBtn = document.getElementById('selection-btn')
 const jdText = document.getElementById('jd-text')
+const tailoringInstructions = document.getElementById('tailoring-instructions')
 const generateBtn = document.getElementById('generate-btn')
 const status = document.getElementById('status')
 const autofillBtn = document.getElementById('autofill-btn')
@@ -167,6 +168,7 @@ generateBtn.addEventListener('click', async () => {
       body: JSON.stringify({
         baseResumeId: resumeId,
         jdText: text,
+        tailoringInstructions: tailoringInstructions.value.trim() || undefined,
         provider: defaultProvider,
         job: { url: tab.url || '', title: tab.title || 'Job application' },
       }),

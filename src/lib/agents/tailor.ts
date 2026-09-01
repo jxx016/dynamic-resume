@@ -4,8 +4,8 @@ import { TailoringResultSchema, type TailoringResult } from '@/lib/schema/tailor
 import type { Resume } from '@/lib/schema/resume'
 
 export async function tailorResume(
-  client: StructuredClient, base: Resume, jdText: string,
+  client: StructuredClient, base: Resume, jdText: string, tailoringInstructions?: string,
 ): Promise<TailoringResult> {
-  const result = await client.generateStructured(tailorPrompt(base, jdText), TailoringResultSchema)
+  const result = await client.generateStructured(tailorPrompt(base, jdText, tailoringInstructions), TailoringResultSchema)
   return { ...result, suggestions: result.suggestions.map(s => ({ ...s, status: 'pending' as const })) }
 }

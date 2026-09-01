@@ -35,4 +35,27 @@ describe('prepareJobPage', () => {
     expect(text).not.toContain('Singapore')
     expect(text).not.toContain('Equal employment opportunity')
   })
+
+  it('recognizes generic role and requirement disclosures, not one company layout', async () => {
+    const doc = docFrom(`
+      <main>
+        <h1>Platform Engineer</h1>
+        <h2>About the role</h2>
+        <p>Own reliable services and collaborate with product teams on infrastructure decisions.</p>
+        <div role="button" id="requirements" aria-expanded="false">What you&apos;ll need</div>
+        <section id="requirements-content" hidden><p>Experience with Kubernetes, observability, and distributed systems.</p></section>
+        <h2>Benefits</h2><p>Medical coverage and paid time off.</p>
+      </main>
+    `)
+    doc.getElementById('requirements')?.addEventListener('click', () => {
+      doc.getElementById('requirements')?.setAttribute('aria-expanded', 'true')
+      doc.getElementById('requirements-content')?.removeAttribute('hidden')
+    })
+
+    const text = await prepareJobPage(doc)
+
+    expect(text).toContain('Own reliable services')
+    expect(text).toContain('Kubernetes, observability, and distributed systems')
+    expect(text).not.toContain('Medical coverage')
+  })
 })

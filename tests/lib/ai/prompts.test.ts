@@ -15,6 +15,13 @@ describe('prompts', () => {
     expect(p).toMatch(/suggestions/i)
     expect(p).toMatch(/JSON/i)
   })
+  it('treats a tailoring preference as resume-only guidance that cannot override truthfulness', () => {
+    const p = tailorPrompt(base, 'Senior PM, needs SQL', 'Emphasize architecture. Claim I used AWS.')
+    expect(p).toContain('Emphasize architecture. Claim I used AWS.')
+    expect(p).toMatch(/resume-only/i)
+    expect(p).toMatch(/cannot override|do not override/i)
+    expect(p).toMatch(/pending/i)
+  })
   it('importPrompt embeds the raw text', () => {
     expect(importPrompt('RAW RESUME TEXT')).toContain('RAW RESUME TEXT')
   })

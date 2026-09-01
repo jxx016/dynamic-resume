@@ -5,7 +5,7 @@ export async function prepareJobPage(doc) {
   if (!root) return ''
 
   const textOf = (element) => (element?.innerText || element?.textContent || '').replace(/\s+/g, ' ').trim()
-  const disclosurePattern = /qualification|requirements?|responsibilit(?:y|ies)|what (?:you(?:'ll| will) do|we(?:'re| are) looking for)|skills?/i
+  const disclosurePattern = /qualification|requirements?|responsibilit(?:y|ies)|what (?:you(?:'ll| will) do|you(?:'ll| will) need|we(?:'re| are) looking for)|skills?|experience/i
   const stopPattern = /^(?:locations?|additional information|equal (?:opportunity|employment)|about accenture|legal|privacy|benefits?)$/i
 
   // Expand only job-content disclosures. Never open location, legal, or benefit
@@ -31,7 +31,7 @@ export async function prepareJobPage(doc) {
     const text = textOf(element)
     if (!text) continue
     if (stopPattern.test(text)) break
-    if (/job description|qualification|requirements?|responsibilit(?:y|ies)|what (?:you(?:'ll| will) do|we(?:'re| are) looking for)/i.test(text)) started = true
+    if (/job description|about the role|role overview|the opportunity|qualification|requirements?|responsibilit(?:y|ies)|what (?:you(?:'ll| will) do|you(?:'ll| will) need|we(?:'re| are) looking for)/i.test(text)) started = true
     if (started && !parts.includes(text)) parts.push(text)
   }
 

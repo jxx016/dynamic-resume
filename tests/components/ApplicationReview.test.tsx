@@ -5,7 +5,7 @@ import { ApplicationReview } from '@/components/ApplicationReview'
 
 const ready = {
   id: 'a_1', baseResumeId: 'r_1', job: { url: 'https://jobs.example.com', title: 'Solution Architect' },
-  jdText: 'JD', provider: 'gemini', status: 'ready', createdAt: '', updatedAt: '',
+  jdText: 'JD', tailoringInstructions: 'Emphasize customer discovery and solution design.', provider: 'gemini', status: 'ready', createdAt: '', updatedAt: '',
   tailoringResult: {
     tailoredResume: { id: 'ignored', label: 'ignored', isBase: false, sourceResumeId: 'r_1', basics: { name: 'Jo', email: '', phone: '', location: '', links: [] }, summary: 'S', experience: [], education: [], skills: [], projects: [], meta: { createdAt: '', updatedAt: '' } },
     changeLog: [], suggestions: [], atsReport: { jdKeywords: [], matched: [], missing: [], score: 75 },
@@ -29,6 +29,7 @@ describe('ApplicationReview', () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/applications/a_1/generate', { method: 'POST' }))
     expect(await screen.findByText(/ATS keyword coverage: 75%/i)).toBeDefined()
+    expect(screen.getByText(/customer discovery and solution design/i)).toBeDefined()
   })
 
   it('shows a retry action when a saved generation failed', async () => {

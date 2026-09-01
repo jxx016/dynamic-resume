@@ -10,6 +10,7 @@ export const ApplicationSchema = z.object({
   baseResumeId: z.string().min(1),
   job: z.object({ url: z.string(), title: z.string() }),
   jdText: z.string().min(1),
+  tailoringInstructions: z.string().trim().min(1).max(1000).optional(),
   provider: ProviderSchema,
   status: ApplicationStatusSchema,
   tailoringResult: TailoringResultSchema.optional(),

@@ -94,7 +94,7 @@ export function ApplicationReview({ applicationId }: { applicationId: string }) 
 
   return (
     <>
-      {application && <section className="section"><h2>{application.job.title}</h2><p className="section-hint">Generated from your saved base resume for this specific job application.</p></section>}
+      {application && <section className="section"><h2>{application.job.title}</h2><p className="section-hint">Generated from your saved base resume for this specific job application.</p>{application.tailoringInstructions && <div className="sunken"><strong>Tailoring preference</strong><p className="section-hint">{application.tailoringInstructions}</p></div>}</section>}
       {error && <section className="section"><p className="error">{error}</p><button onClick={generate}>Try generation again</button></section>}
       {busy && <section className="section"><div className="panel"><h2>Generating enhanced resume…</h2><p className="section-hint">Matching your verified experience to this job description. This usually takes around 30 seconds.</p></div></section>}
       {!busy && application?.status === 'ready' && application.tailoringResult && (

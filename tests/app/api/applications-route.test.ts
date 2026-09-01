@@ -50,10 +50,12 @@ describe('application generation routes', () => {
     const create = await createApplication(request({
       baseResumeId: 'r_1', provider: 'gemini', jdText: 'Need AWS and solution architecture.',
       job: { url: 'https://jobs.example.com/solution', title: 'Solution Architect' },
+      tailoringInstructions: 'Emphasize customer-facing architecture work.',
     }))
     expect(create.status).toBe(200)
     const draft = await create.json()
     expect(draft.status).toBe('draft')
+    expect(draft.tailoringInstructions).toBe('Emphasize customer-facing architecture work.')
 
     const generated = await generateApplication(request(), params(draft.id))
     expect(generated.status).toBe(200)
