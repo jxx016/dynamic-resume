@@ -24,4 +24,15 @@ describe('applyConfirmations', () => {
     expect(final.skills.some(s => s.name === 'Kubernetes')).toBe(true)
     expect(final.skills.some(s => s.name === 'Terraform')).toBe(false)
   })
+
+  it('never turns a pending question or instruction into a skill', () => {
+    const questioned: TailoringResult = {
+      ...result,
+      suggestions: [{ text: 'Explicitly mention AWS architecture if you have relevant experience.', rationale: 'JD', status: 'pending' }],
+    }
+
+    const final = applyConfirmations(questioned, [{ index: 0, accept: true }])
+
+    expect(final.skills.map(skill => skill.name)).toEqual(['SQL'])
+  })
 })

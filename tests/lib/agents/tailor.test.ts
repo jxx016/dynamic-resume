@@ -22,4 +22,28 @@ describe('tailorResume', () => {
     expect(r.suggestions[0].status).toBe('pending')
     expect(r.atsReport.score).toBe(40)
   })
+
+  it('restores source roles and rejects model-injected skills when tailoring output drops them', async () => {
+    const source = {
+      ...base,
+      skills: [{ name: 'TypeScript', category: 'tech' }],
+      experience: [
+        { company: 'Current Co', title: 'Senior AI Engineer', start: '2024', end: 'Present', location: '', bullets: [{ id: 'b_current', text: 'Built agents', tags: [] }] },
+        { company: 'Previous Co', title: 'Software Engineer', start: '2018', end: '2024', location: '', bullets: [{ id: 'b_previous', text: 'Built APIs', tags: [] }] },
+      ],
+    }
+    const incomplete = JSON.stringify({
+      tailoredResume: {
+        ...source,
+        experience: [source.experience[1]],
+        skills: [...source.skills, { name: 'Explicitly claim AWS architecture experience', category: 'added' }],
+      },
+      changeLog: [], suggestions: [], atsReport: { jdKeywords: [], matched: [], missing: [], score: 0 },
+    })
+
+    const result = await tailorResume(new StructuredClient({ generate: async () => incomplete }), source, 'JD')
+
+    expect(result.tailoredResume.experience.map(role => role.company)).toEqual(['Previous Co', 'Current Co'])
+    expect(result.tailoredResume.skills.map(skill => skill.name)).toEqual(['TypeScript'])
+  })
 })

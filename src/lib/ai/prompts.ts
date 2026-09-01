@@ -3,6 +3,7 @@ import type { Resume } from '@/lib/schema/resume'
 const HONESTY = `Rules:
 - Only reframe, reorder, and rephrase the candidate's REAL experience to match the job.
 - DO NOT invent or fabricate skills, employers, dates, or achievements.
+- Preserve every verified role, project, education entry, skill, and contact fact from the base resume. Do not silently omit them.
 - Any content the candidate does not already have goes into "suggestions" with status "pending" (never directly into the resume).`
 
 export function importPrompt(rawText: string): string {
