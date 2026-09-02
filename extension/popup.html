@@ -40,14 +40,14 @@
 <body>
   <h1>Dynamic Resume</h1>
 
-  <label for="resume-select">Resume</label>
-  <select id="resume-select" disabled></select>
+  <p id="profile-summary">Checking your saved profile…</p>
 
-  <button id="grab-btn" disabled>Grab job description</button>
+  <button id="grab-btn" class="secondary" disabled>Grab job description</button>
   <button id="selection-btn" class="secondary" disabled style="display:none;">Use selected text instead</button>
 
-  <label for="jd-text">Captured text (check it before continuing)</label>
+  <label for="jd-text">Job description</label>
   <textarea id="jd-text" placeholder="Checking this page…"></textarea>
+  <button id="recapture-btn" class="secondary" disabled style="display:none;">Re-grab from page</button>
 
   <label for="tailoring-instructions">Tailoring preferences (optional)</label>
   <textarea id="tailoring-instructions" maxlength="1000" placeholder="E.g. Emphasize customer-facing solution design. Only truthful resume edits."></textarea>

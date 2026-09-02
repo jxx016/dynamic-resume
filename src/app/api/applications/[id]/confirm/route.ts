@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getContext } from '@/lib/app-context'
 import { applyConfirmations } from '@/lib/agents/confirm'
 import { newId, nowIso } from '@/lib/ids'
+import { uniqueTailoredResumeLabel } from '@/lib/job-label'
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -17,10 +18,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { decisions = [] } = await req.json()
   const body = applyConfirmations(application.tailoringResult, decisions)
   const timestamp = nowIso(() => new Date())
+  const label = uniqueTailoredResumeLabel(
+    store.list().filter(resume => !resume.isBase).map(resume => resume.label),
+    application.job.company,
+    application.job.title,
+  )
   const finalResume = store.create({
     ...body,
     id: newId('t', store.list().length + 1),
-    label: `${application.job.title} — tailored`,
+    label,
     isBase: false,
     sourceResumeId: application.baseResumeId,
     meta: { createdAt: timestamp, updatedAt: timestamp },

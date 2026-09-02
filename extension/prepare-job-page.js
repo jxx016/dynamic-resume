@@ -38,11 +38,64 @@ export async function prepareJobPage(doc) {
   const captured = parts.join('\n')
   if (captured.length >= 60) return captured
 
+  // Ashby, Greenhouse SPAs, and similar boards often ship an empty shell with
+  // the full posting in meta tags until JavaScript renders the page.
+  const meta = root.querySelector('meta[name="description"]')?.getAttribute('content')
+  if (meta) {
+    const decoded = meta
+      .replace(/&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .trim()
+    if (decoded.length >= 60) return decoded
+  }
+
   // Conservative fallback for job boards without semantic headings.
   let best = ''
   for (const element of contentRoot.querySelectorAll('section, div, article')) {
+    if (element.closest('script, style, noscript')) continue
     const text = textOf(element)
+    if (/@keyframes|overflow:\s*hidden|enable JavaScript/i.test(text)) continue
     if (text.length > best.length) best = text
   }
-  return best.length >= 60 ? best : ''
+  if (best.length >= 60) return best
+
+  return ''
+}
+
+export function extractJobMeta(doc) {
+  const root = doc || (typeof document !== 'undefined' ? document : null)
+  if (!root) return { title: '', company: '' }
+
+  const textOf = (element) => (element?.innerText || element?.textContent || '').replace(/\s+/g, ' ').trim()
+  const main = root.querySelector('main, article, [role="main"]') || root.body || root
+  let title = textOf(main.querySelector('h1'))
+  let company = ''
+
+  for (const candidate of main.querySelectorAll('header p, p, [class*="company" i], [data-company]')) {
+    const text = textOf(candidate)
+    const match = text.match(/^(.+?)\s*[·|]\s/)
+    if (match && match[1].length <= 80) {
+      company = match[1].trim()
+      break
+    }
+  }
+
+  const pageTitle = root.title || (typeof document !== 'undefined' ? document.title : '')
+  if (pageTitle.includes(' @ ')) {
+    const [titlePart, companyPart] = pageTitle.split(' @ ')
+    if (!title) title = titlePart.trim()
+    if (!company) company = companyPart.trim()
+  } else if ((!title || !company) && pageTitle) {
+    const parts = pageTitle.split(/\s*[|–—-]\s*/)
+    if (!title && parts[0]) title = parts[0].trim()
+    if (!company && parts[1]) company = parts[1].trim()
+  }
+
+  const ogSite = root.querySelector('meta[property="og:site_name"]')?.getAttribute('content')
+  if (!company && ogSite) company = ogSite.trim()
+
+  return { title, company }
 }

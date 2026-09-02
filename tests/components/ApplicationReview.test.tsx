@@ -28,7 +28,8 @@ describe('ApplicationReview', () => {
     expect(screen.getByText(/generating enhanced resume/i)).toBeDefined()
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/applications/a_1/generate', { method: 'POST' }))
-    expect(await screen.findByText(/ATS keyword coverage: 75%/i)).toBeDefined()
+    expect(await screen.findByText(/Keyword coverage: 75%/i)).toBeDefined()
+    expect(screen.getByText(/Ready to download/i)).toBeDefined()
     expect(screen.getByText(/customer discovery and solution design/i)).toBeDefined()
   })
 

@@ -46,4 +46,21 @@ describe('tailorResume', () => {
     expect(result.tailoredResume.experience.map(role => role.company)).toEqual(['Previous Co', 'Current Co'])
     expect(result.tailoredResume.skills.map(skill => skill.name)).toEqual(['TypeScript'])
   })
+
+  it('caps suggestions to the top three items', async () => {
+    const manySuggestions = JSON.stringify({
+      tailoredResume: base,
+      changeLog: [],
+      suggestions: [
+        { text: 'One', rationale: 'r1', status: 'pending' },
+        { text: 'Two', rationale: 'r2', status: 'pending' },
+        { text: 'Three', rationale: 'r3', status: 'pending' },
+        { text: 'Four', rationale: 'r4', status: 'pending' },
+      ],
+      atsReport: { jdKeywords: [], matched: [], missing: [], score: 0 },
+    })
+    const result = await tailorResume(new StructuredClient({ generate: async () => manySuggestions }), base, 'JD')
+    expect(result.suggestions).toHaveLength(3)
+    expect(result.suggestions.map(s => s.text)).toEqual(['One', 'Two', 'Three'])
+  })
 })

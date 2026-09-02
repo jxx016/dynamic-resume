@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { setContextForTest } from '@/lib/app-context'
+import { mergeResumeIntoProfile, emptyProfile } from '@/lib/profile/profile-service'
 import { SqliteResumeStore } from '@/lib/store/sqlite-store'
 import { SqliteApplicationStore } from '@/lib/store/sqlite-application-store'
+import { SqliteProfileStore } from '@/lib/store/sqlite-profile-store'
 import { StructuredClient } from '@/lib/ai/structured-client'
 import { POST as createApplication } from '@/app/api/applications/route'
 import { GET as getApplication } from '@/app/api/applications/[id]/route'
@@ -27,6 +29,7 @@ const modelResult = JSON.stringify({
 
 let resumes: SqliteResumeStore
 let applications: SqliteApplicationStore
+let profiles: SqliteProfileStore
 
 function params(id: string) { return { params: Promise.resolve({ id }) } }
 function request(body?: unknown) {
@@ -39,9 +42,11 @@ function request(body?: unknown) {
 beforeEach(() => {
   resumes = new SqliteResumeStore(':memory:')
   applications = new SqliteApplicationStore(':memory:')
-  resumes.create(base)
+  profiles = new SqliteProfileStore(':memory:')
+  const created = resumes.create(base)
+  profiles.replace(mergeResumeIntoProfile(emptyProfile(), created))
   const client = new StructuredClient({ generate: async () => modelResult })
-  setContextForTest({ store: resumes, applications, clientFor: () => client })
+  setContextForTest({ store: resumes, applications, profiles, clientFor: () => client })
 })
 afterEach(() => setContextForTest(null))
 
@@ -49,7 +54,7 @@ describe('application generation routes', () => {
   it('creates, generates, persists, and finalizes a distinct resume for one job', async () => {
     const create = await createApplication(request({
       baseResumeId: 'r_1', provider: 'gemini', jdText: 'Need AWS and solution architecture.',
-      job: { url: 'https://jobs.example.com/solution', title: 'Solution Architect' },
+      job: { url: 'https://jobs.example.com/solution', title: 'Solution Architect', company: 'Acme Corp' },
       tailoringInstructions: 'Emphasize customer-facing architecture work.',
     }))
     expect(create.status).toBe(200)
@@ -71,6 +76,7 @@ describe('application generation routes', () => {
     const finalResume = await confirmed.json()
     expect(finalResume.isBase).toBe(false)
     expect(finalResume.sourceResumeId).toBe('r_1')
+    expect(finalResume.label).toBe('Acme Corp — Solution Architect')
     expect(finalResume.id).not.toBe('r_1')
   })
 
@@ -80,5 +86,17 @@ describe('application generation routes', () => {
       job: { url: 'https://jobs.example.com/solution', title: 'Solution Architect' },
     }))
     expect(response.status).toBe(404)
+  })
+
+  it('creates a profile-based application without a baseResumeId', async () => {
+    const response = await createApplication(request({
+      provider: 'gemini',
+      jdText: 'Need AWS and solution architecture.',
+      job: { url: 'https://jobs.example.com/solution', title: 'Solution Architect' },
+    }))
+    expect(response.status).toBe(200)
+    const draft = await response.json()
+    expect(draft.baseResumeId).toBeUndefined()
+    expect(draft.profileSnapshot?.skills).toContainEqual(expect.objectContaining({ name: 'TypeScript' }))
   })
 })

@@ -33,6 +33,6 @@ export async function tailorResume(
   return {
     ...result,
     tailoredResume: preserveVerifiedContent(base, result.tailoredResume),
-    suggestions: result.suggestions.map(s => ({ ...s, status: 'pending' as const })),
+    suggestions: result.suggestions.slice(0, 3).map(s => ({ ...s, status: 'pending' as const })),
   }
 }

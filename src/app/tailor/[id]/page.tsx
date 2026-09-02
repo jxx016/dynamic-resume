@@ -6,6 +6,7 @@ import { JdInput } from '@/components/JdInput'
 import { AtsReport } from '@/components/AtsReport'
 import { SuggestionReview } from '@/components/SuggestionReview'
 import { ProviderPicker } from '@/components/ProviderPicker'
+import { formatResumePdfFilename } from '@/lib/job-label'
 import type { TailoringResult } from '@/lib/schema/tailoring'
 import type { Resume } from '@/lib/schema/resume'
 
@@ -68,7 +69,12 @@ export default function TailorPage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${finalResume.basics.name.replace(/\s+/g, '_') || 'resume'}.pdf`
+    a.download = formatResumePdfFilename(
+      finalResume.basics.name,
+      undefined,
+      finalResume.label,
+      finalResume.label,
+    )
     a.click()
     URL.revokeObjectURL(url)
   }

@@ -59,3 +59,19 @@ describe('prepareJobPage', () => {
     expect(text).not.toContain('Medical coverage')
   })
 })
+
+describe('extractJobMeta', () => {
+  it('reads the role title and company from a generic job page', async () => {
+    const { extractJobMeta } = await import('../../extension/prepare-job-page.js')
+    const doc = docFrom(`
+      <main>
+        <header><p>Demo Corp · Careers</p><h1>Forward Deployed Engineer</h1></header>
+      </main>
+    `)
+
+    expect(extractJobMeta(doc)).toEqual({
+      title: 'Forward Deployed Engineer',
+      company: 'Demo Corp',
+    })
+  })
+})

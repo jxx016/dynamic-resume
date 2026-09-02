@@ -1,11 +1,11 @@
-import { prepareJobPage } from './prepare-job-page.js'
+import { prepareJobPage, extractJobMeta } from './prepare-job-page.js'
 import { autofillFields } from './autofill-fields.js'
 
 const APP_ORIGIN = 'http://localhost:3000'
-const LAST_RESUME_KEY = 'lastResumeId'
-
-const resumeSelect = document.getElementById('resume-select')
+const resumeSelect = null
+const profileSummary = document.getElementById('profile-summary')
 const grabBtn = document.getElementById('grab-btn')
+const recaptureBtn = document.getElementById('recapture-btn')
 const selectionBtn = document.getElementById('selection-btn')
 const jdText = document.getElementById('jd-text')
 const tailoringInstructions = document.getElementById('tailoring-instructions')
@@ -26,11 +26,11 @@ function setAutofillStatus(message, isError = false) {
 }
 
 function updateGenerateButton() {
-  generateBtn.disabled = !resumeSelect.value || jdText.value.trim().length === 0 || !defaultProvider
+  generateBtn.disabled = jdText.value.trim().length === 0 || !defaultProvider
 }
 
 function updateAutofillButton() {
-  autofillBtn.disabled = !resumeSelect.value
+  autofillBtn.disabled = !defaultProvider
 }
 
 async function getActiveTab() {
@@ -40,26 +40,49 @@ async function getActiveTab() {
 
 // This-page detection expands relevant closed job-content sections first, then
 // captures the result for the user to quickly confirm before generation.
+function updateCaptureUi(mode) {
+  const autoCaptured = mode === 'auto'
+  grabBtn.style.display = autoCaptured ? 'none' : 'block'
+  grabBtn.textContent = autoCaptured ? 'Re-grab from page' : 'Grab job description'
+  recaptureBtn.style.display = autoCaptured ? 'block' : 'none'
+  recaptureBtn.disabled = false
+}
+
+function defaultTailoringForJob(title) {
+  if (!title) return ''
+  if (/solutions?\s+engineer|sales\s+engineer|forward\s+deployed/i.test(title)) {
+    return 'Curate this as a Solutions Engineer resume: emphasize customer-facing technical wins, POCs, demos, workshops, production agent deployments, and LangChain/LangGraph experience. Only truthful edits.'
+  }
+  return ''
+}
+
 async function detectJobPage(showStatus) {
   try {
     const tab = await getActiveTab()
     const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: prepareJobPage })
+    const [{ result: meta }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: extractJobMeta })
     if (result) {
       jdText.value = result
       jdText.placeholder = ''
-      if (showStatus) setStatus('Looks like a job posting — check the captured text, then continue.')
+      if (!tailoringInstructions.value.trim()) {
+        tailoringInstructions.value = defaultTailoringForJob(meta?.title || tab.title || '')
+      }
+      updateCaptureUi('auto')
+      if (showStatus) setStatus('Captured from this page — check the text, then generate.')
     } else {
-      jdText.placeholder = 'Click "Grab job description" above'
+      jdText.placeholder = 'Use the buttons below to capture the job description'
+      updateCaptureUi('manual')
       if (showStatus) {
-        setStatus('Doesn\'t look like a job posting from here — try Grab, or highlight the description on the page and use "Use selected text".')
+        setStatus('Could not auto-detect a job description here — grab it manually below.')
       }
       selectionBtn.style.display = 'block'
       selectionBtn.disabled = false
     }
   } catch {
-    jdText.placeholder = 'Click "Grab job description" above'
+    jdText.placeholder = 'Use the buttons below to capture the job description'
+    updateCaptureUi('manual')
     if (showStatus) {
-      setStatus('Can\'t read this page — try highlighting the job description and using "Use selected text".', true)
+      setStatus('Could not read this page — grab the description manually below.', true)
     }
     selectionBtn.style.display = 'block'
     selectionBtn.disabled = false
@@ -72,15 +95,15 @@ async function detectJobPage(showStatus) {
 // burying a more foundational problem (dev server down, no resumes yet).
 async function loadResumes() {
   try {
-    const res = await fetch(`${APP_ORIGIN}/api/resumes`)
+    const res = await fetch(`${APP_ORIGIN}/api/profile`)
     if (!res.ok) throw new Error(`status ${res.status}`)
-    const resumes = await res.json()
+    const profile = await res.json()
     const providerResponse = await fetch(`${APP_ORIGIN}/api/providers`)
     if (!providerResponse.ok) throw new Error(`provider status ${providerResponse.status}`)
     const providers = await providerResponse.json()
     defaultProvider = typeof providers.default === 'string' ? providers.default : null
 
-    if (!Array.isArray(resumes) || resumes.length === 0) {
+    if (!profile?.basics?.value?.name) {
       setStatus('No resumes yet — import one in Dynamic Resume first.', true)
       return false
     }
@@ -89,18 +112,9 @@ async function loadResumes() {
       return false
     }
 
-    const { [LAST_RESUME_KEY]: lastId } = await chrome.storage.local.get(LAST_RESUME_KEY)
-    resumeSelect.innerHTML = ''
-    for (const r of resumes) {
-      const option = document.createElement('option')
-      option.value = r.id
-      option.textContent = r.label
-      resumeSelect.appendChild(option)
-    }
-    if (lastId && resumes.some(r => r.id === lastId)) resumeSelect.value = lastId
-
-    resumeSelect.disabled = false
+    profileSummary.textContent = `Using verified profile: ${profile.basics.value.name}`
     grabBtn.disabled = false
+    recaptureBtn.disabled = false
     updateGenerateButton()
     updateAutofillButton()
     return true
@@ -118,19 +132,24 @@ grabBtn.addEventListener('click', async () => {
     if (result) {
       jdText.value = result
       selectionBtn.style.display = 'none'
+      updateCaptureUi('auto')
       setStatus('Captured — check it looks right before continuing.')
     } else {
+      updateCaptureUi('manual')
       selectionBtn.style.display = 'block'
       selectionBtn.disabled = false
       setStatus("Couldn't auto-detect the job description. Highlight it on the page, then press \"Use selected text\".", true)
     }
   } catch {
+    updateCaptureUi('manual')
     setStatus("Couldn't read that page — try highlighting the job description and using \"Use selected text\" instead.", true)
     selectionBtn.style.display = 'block'
     selectionBtn.disabled = false
   }
   updateGenerateButton()
 })
+
+recaptureBtn.addEventListener('click', () => grabBtn.click())
 
 selectionBtn.addEventListener('click', async () => {
   try {
@@ -153,24 +172,25 @@ selectionBtn.addEventListener('click', async () => {
 })
 
 generateBtn.addEventListener('click', async () => {
-  const resumeId = resumeSelect.value
   const text = jdText.value.trim()
-  if (!resumeId || !text || !defaultProvider) return
-
-  await chrome.storage.local.set({ [LAST_RESUME_KEY]: resumeId })
+  if (!text || !defaultProvider) return
   generateBtn.disabled = true
   setStatus('Creating a tailored resume for this job…')
   try {
     const tab = await getActiveTab()
+    const [{ result: meta }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: extractJobMeta })
     const response = await fetch(`${APP_ORIGIN}/api/applications`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        baseResumeId: resumeId,
         jdText: text,
         tailoringInstructions: tailoringInstructions.value.trim() || undefined,
         provider: defaultProvider,
-        job: { url: tab.url || '', title: tab.title || 'Job application' },
+        job: {
+          url: tab.url || '',
+          title: meta?.title || tab.title || 'Job application',
+          company: meta?.company || undefined,
+        },
       }),
     })
     const application = await response.json()
@@ -185,20 +205,17 @@ generateBtn.addEventListener('click', async () => {
 })
 
 autofillBtn.addEventListener('click', async () => {
-  const resumeId = resumeSelect.value
-  if (!resumeId) return
-
   setAutofillStatus('Filling in what we can find…')
   try {
-    const res = await fetch(`${APP_ORIGIN}/api/resumes/${resumeId}`)
+    const res = await fetch(`${APP_ORIGIN}/api/profile`)
     if (!res.ok) throw new Error(`status ${res.status}`)
-    const resume = await res.json()
+    const profile = await res.json()
 
     const tab = await getActiveTab()
     const [{ result }] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: autofillFields,
-      args: [resume.basics],
+      args: [profile.basics.value],
     })
 
     const filled = Object.entries(result).filter(([, ok]) => ok).map(([field]) => field)
@@ -216,7 +233,6 @@ autofillBtn.addEventListener('click', async () => {
 })
 
 jdText.addEventListener('input', updateGenerateButton)
-resumeSelect.addEventListener('change', () => { updateGenerateButton(); updateAutofillButton() })
 
 async function init() {
   const ready = await loadResumes()

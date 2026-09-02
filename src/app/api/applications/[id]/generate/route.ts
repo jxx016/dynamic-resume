@@ -11,7 +11,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
   if (!application) return NextResponse.json({ error: 'application not found' }, { status: 404 })
   if (application.status === 'ready' || application.status === 'finalized') return NextResponse.json(application)
   if (application.status === 'generating') return NextResponse.json({ error: 'generation already in progress' }, { status: 409 })
-  const base = store.get(application.baseResumeId)
+  const base = application.profileSnapshot ?? (application.baseResumeId ? store.get(application.baseResumeId) : null)
   if (!base) return NextResponse.json({ error: 'base resume not found' }, { status: 404 })
 
   const generating = applications.update(id, { ...application, status: 'generating', error: undefined, updatedAt: nowIso(() => new Date()) })

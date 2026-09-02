@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AtsReport } from '@/components/AtsReport'
 import { SuggestionReview } from '@/components/SuggestionReview'
+import { formatResumePdfFilename, formatTailoredResumeLabel } from '@/lib/job-label'
 import type { Application } from '@/lib/schema/application'
 import type { Resume } from '@/lib/schema/resume'
 
@@ -83,18 +84,49 @@ export function ApplicationReview({ applicationId }: { applicationId: string }) 
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `${finalResume.basics.name.replace(/\s+/g, '_') || 'resume'}.pdf`
+    link.download = formatResumePdfFilename(
+      finalResume.basics.name,
+      application?.job.company,
+      application?.job.title ?? finalResume.label,
+      finalResume.label,
+    )
     link.click()
     URL.revokeObjectURL(url)
   }
 
   if (finalResume) {
-    return <section className="section"><div className="panel"><h2>Enhanced resume ready</h2><p className="section-hint">Saved for this application.</p><button onClick={download}>Download PDF</button></div></section>
+    const savedLabel = application
+      ? formatTailoredResumeLabel(application.job.company, application.job.title)
+      : finalResume.label
+    return (
+      <section className="section">
+        <div className="panel">
+          <h2>Enhanced resume ready</h2>
+          <p className="section-hint">Saved as <strong>{savedLabel}</strong> in your library.</p>
+          <button onClick={download}>Download PDF</button>
+        </div>
+      </section>
+    )
   }
+
+  const heading = application
+    ? formatTailoredResumeLabel(application.job.company, application.job.title)
+    : null
 
   return (
     <>
-      {application && <section className="section"><h2>{application.job.title}</h2><p className="section-hint">Generated from your saved base resume for this specific job application.</p>{application.tailoringInstructions && <div className="sunken"><strong>Tailoring preference</strong><p className="section-hint">{application.tailoringInstructions}</p></div>}</section>}
+      {application && (
+        <section className="section">
+          <h2>{heading}</h2>
+          <p className="section-hint">Generated from your verified profile for this job application.</p>
+          {application.tailoringInstructions && (
+            <div className="sunken">
+              <strong>Tailoring preference</strong>
+              <p className="section-hint">{application.tailoringInstructions}</p>
+            </div>
+          )}
+        </section>
+      )}
       {error && <section className="section"><p className="error">{error}</p><button onClick={generate}>Try generation again</button></section>}
       {busy && <section className="section"><div className="panel"><h2>Generating enhanced resume…</h2><p className="section-hint">Matching your verified experience to this job description. This usually takes around 30 seconds.</p></div></section>}
       {!busy && application?.status === 'ready' && application.tailoringResult && (

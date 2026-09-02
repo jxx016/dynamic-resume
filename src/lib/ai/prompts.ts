@@ -38,7 +38,9 @@ export function tailorPrompt(base: Resume, jdText: string, tailoringInstructions
     : ''
   return `Tailor this resume to the job description. ${HONESTY}\n\n` +
     `Return a TailoringResult JSON: { tailoredResume, changeLog, suggestions, atsReport }. ` +
-    `atsReport must list jdKeywords, matched, missing, and a 0-100 score. Reply with ONLY the JSON.${preference}\n` +
+    `suggestions: at most 3 highest-impact gaps only — one sentence each, prioritized by how much they would improve fit. ` +
+    `Do not list every missing keyword as a separate suggestion. ` +
+    `atsReport must list jdKeywords, matched, missing, and a 0-100 keyword-coverage score. Reply with ONLY the JSON.${preference}\n` +
     `--- BASE RESUME ---\n${JSON.stringify(base)}\n\n--- JOB DESCRIPTION ---\n${jdText}`
 }
 
