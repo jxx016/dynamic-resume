@@ -4,3 +4,27 @@ node_modules/
 !.env.example
 *.sqlite
 .DS_Store
+.superpowers/
+data/
+.worktrees/
+
+# next.js / build output
+/out/
+/build
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+
+# eval outputs
+eval/results/
+
+# vercel
+.vercel
+
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.pem

@@ -1,0 +1,42 @@
+{
+  "name": "dynamic-resume",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "eval:jobs": "node scripts/eval-jobs.mjs"
+  },
+  "dependencies": {
+    "@google/genai": "^2.14.0",
+    "@react-pdf/renderer": "^4.5.1",
+    "better-sqlite3": "^13.0.2",
+    "mammoth": "^1.12.0",
+    "next": "16.2.12",
+    "openai": "^7.4.0",
+    "pdf-parse": "^1.1.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20",
+    "@types/pdf-parse": "^1.1.5",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.2.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.12",
+    "jsdom": "^27.0.1",
+    "typescript": "^5",
+    "vite": "^7.3.6",
+    "vitest": "^3.2.7"
+  }
+}
