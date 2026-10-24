@@ -78,3 +78,10 @@ export function rebuildProfileFromResumes(resumes: Resume[]): Profile {
 export function profileToResume(profile: Profile, id: string, now: string): Resume {
   return { id, label: 'Verified profile', isBase: true, basics: profile.basics?.value ?? { name: '', email: '', phone: '', location: '', links: [] }, summary: profile.summary?.value ?? '', experience: profile.experience.filter(item => !item.conflict).map(item => item.value), education: profile.education.filter(item => !item.conflict).map(item => item.value), skills: profile.skills.filter(item => !item.conflict).map(item => item.value), projects: profile.projects.filter(item => !item.conflict).map(item => item.value), meta: { createdAt: now, updatedAt: now } }
 }
+
+/** Tag an evidence item as user-owned so later source deletes keep the edit. */
+export function withUserProvenance<T>(item: ProfileEvidence<T>, originalText: string): ProfileEvidence<T> {
+  const userRecord = { sourceId: 'user', sourceType: 'user' as const, originalText }
+  const withoutUser = item.provenance.filter(record => record.sourceType !== 'user')
+  return { ...item, conflict: undefined, provenance: [...withoutUser, userRecord] }
+}

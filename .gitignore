@@ -15,8 +15,12 @@ data/
 *.tsbuildinfo
 next-env.d.ts
 
+# eval outputs
+eval/results/
+
 # vercel
 .vercel
+
 
 # logs
 npm-debug.log*

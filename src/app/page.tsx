@@ -14,7 +14,11 @@ export default function Home() {
     <main className="page">
       <header className="masthead">
         <h1>Dynamic resume</h1>
-        <span className="tagline">Tailored to every job, without the rewrite</span>
+        <span className="tagline">
+          <Link href="/profile">Your profile</Link>
+          {' · '}
+          Tailored to every job, without the rewrite
+        </span>
       </header>
 
       {resumes.length === 0 ? (
@@ -32,7 +36,8 @@ export default function Home() {
               <h2>Base resumes</h2>
               <p className="section-hint">
                 Your source resumes — e.g. solutions engineer, forward deployed engineer.
-                Imports merge into one verified profile.
+                Imports merge into one verified profile. Edit what Generate uses on{' '}
+                <Link href="/profile">Your profile</Link>.
               </p>
               <div className="stack">
                 {baseResumes.map(resume => <ResumeCard key={resume.id} resume={resume} />)}
